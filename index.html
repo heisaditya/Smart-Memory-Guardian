@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Memory Guardian</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+</script>
+<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+
+<style>
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-thumb{background:#777;border-radius:10px;}
+.light{background:#E9F2FF!important;color:#0F1D40!important;}
+.light .topbar{background:linear-gradient(135deg,#E4EEFF,#CFE3FF)!important;border-bottom:1px solid #b7ccff!important;}
+.light .topbar input{background:#DDE9FF!important;border:1px solid #b0c6ff!important;color:#0F1D40!important;}
+.light .sidebar{background:white!important;border-right:1px solid #cddaff!important;}
+.light .navbtn{background:white!important;border:1px solid #d6e1ff!important;color:#102455!important;}
+.light .navbtn:hover{background:#EDF3FF!important;}
+.light .hero{background:linear-gradient(135deg,#DFF0FF,#D1E7FF)!important;border:1px solid #c5dbff!important;color:#0F2A66!important;}
+.light .titletext{color:#0F2A66!important;}
+.light .card{background:white!important;border:1px solid #d5e1ff!important;color:#0F1D40!important;}
+.light .inputbox{background:white!important;border:1px solid #d5e1ff!important;color:#0F1D40!important;}
+.light .uploadbox{background:white!important;border:2px dashed #9fb6ff!important;}
+.light .uploadbox:hover{background:#F2F6FF!important;border-color:#6c8eff!important;}
+.light .rightpanel{background:white!important;border-left:1px solid #cddaff!important;}
+.light .reminder{background:white!important;border:1px solid #d5e1ff!important;color:#0F1D40!important;}
+.reminder.bg-red-700 { background-color: #dc2626 !important; }
+.reminder.bg-yellow-600 { background-color: #ca8a04 !important; }
+.reminder.bg-green-600 { background-color: #16a34a !important; }
+@keyframes fadeIn {from { opacity: 0; }to { opacity: 1; }}
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+</style>
+</head>
+
+<body class="bg-[#0E0E12] text-white">
+
+<!-- TOP -->
+<div class="topbar flex justify-between items-center px-6 py-4 bg-[#13131A] border-b border-gray-700">
+  <span class="text-2xl font-bold">🧠 Smart Memory Guardian</span>
+  <div class="flex gap-4 items-center">
+    <input placeholder="Search memories..." class="bg-[#1B1B24] px-4 py-2 rounded-lg outline-none border border-gray-700 w-72">
+    <button onclick="toggleTheme()" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">Theme</button>
+  </div>
+</div>
+
+<div class="grid grid-cols-12">
+
+<!-- SIDEBAR -->
+<div class="sidebar col-span-2 bg-[#13131A] min-h-screen border-r border-gray-700 p-5">
+<p class="opacity-70 mb-4 text-sm uppercase tracking-wider">Navigation</p>
+<button class="navbtn w-full bg-[#1B1B24] py-3 rounded-xl px-4 font-semibold">Dashboard</button>
+<button class="navbtn mt-2 w-full bg-[#1B1B24] py-3 rounded-xl px-4 font-semibold">Saved Memories</button>
+<button class="navbtn mt-2 w-full bg-[#1B1B24] py-3 rounded-xl px-4 font-semibold">Analytics</button>
+<button class="navbtn mt-2 w-full bg-[#1B1B24] py-3 rounded-xl px-4 font-semibold">Settings</button>
+</div>
+
+<!-- MAIN -->
+<div class="col-span-7 p-7">
+
+<div class="hero text-center mb-6 rounded-2xl p-6">
+<h1 class="titletext text-4xl font-bold">Never Forget What Matters ✨</h1>
+<p class="text-gray-400 mt-2">
+“Because memories shouldn’t be lost, deadlines shouldn’t trap you, and opportunities shouldn’t slip away.”
+</p>
+</div>
+
+<!-- STATS -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+<div class="card bg-[#1B1B24] p-5 rounded-xl border border-gray-700">
+<p class="text-gray-400 text-sm">Saved Tasks</p>
+<h1 id="statTasks" class="text-3xl font-bold mt-2">0</h1>
+</div>
+<div class="card bg-[#1B1B24] p-5 rounded-xl border border-gray-700">
+<p class="text-gray-400 text-sm">Completed</p>
+<h1 id="statCompleted" class="text-3xl font-bold mt-2">0</h1>
+</div>
+<div class="card bg-[#1B1B24] p-5 rounded-xl border border-gray-700">
+<p class="text-gray-400 text-sm">Productivity</p>
+<h1 id="statScore" class="text-3xl font-bold mt-2">0%</h1>
+</div>
+<div class="card bg-[#1B1B24] p-5 rounded-xl border border-gray-700">
+<p class="text-gray-400 text-sm">Streak</p>
+<h1 id="statStreak" class="text-3xl font-bold mt-2">🔥 0 Days</h1>
+</div>
+</div>
+
+<!-- INPUT -->
+<div class="card bg-[#1B1B24] p-5 rounded-xl border border-gray-700">
+<p class="font-semibold mb-2 text-lg">Store Something Important</p>
+
+<textarea id="taskInput"
+placeholder="Paste notice / email / reminder here..."
+class="inputbox w-full h-28 bg-[#0E0E12] rounded-xl p-4 outline-none border border-gray-700"></textarea>
+
+<label for="fileUpload"
+class="uploadbox mt-3 w-full flex flex-col items-center justify-center cursor-pointer
+bg-[#0E0E12] border-2 border-dashed border-gray-600 rounded-xl p-5 hover:border-blue-500 hover:bg-[#11111A] transition">
+<span class="text-lg font-semibold">📄 Upload Notice / PDF / Screenshot</span>
+<p class="text-gray-400 text-sm mt-1">PDF • DOCX • Images • Text</p>
+<input id="fileUpload" type="file" class="hidden" onchange="handleFileUpload(event)">
+</label>
+
+<p id="fileLabel" class="text-gray-400 text-sm mt-2"></p>
+
+<button onclick="addTask()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-semibold">
+Save Memory
+</button>
+</div>
+
+<h2 class="text-2xl mt-7 mb-3 font-bold">Your Saved Items</h2>
+<div id="taskGrid" class="grid grid-cols-2 gap-4"></div>
+
+</div>
+
+<!-- REMINDERS -->
+<div class="rightpanel col-span-3 p-6 bg-[#13131A] border-l border-gray-700">
+<h2 class="text-2xl font-bold mb-4 titletext">Upcoming Reminders</h2>
+<div id="reminders" class="space-y-3"></div>
+</div>
+
+</div>
+
+<script>
+ let tasks = []; // Will be populated from the database
+ let completed = 0; // Still tracks client-side completed for stats, needs backend sync later
+
+function toggleTheme(){document.body.classList.toggle("light");}
+
+/* ---------------- FILE EXTRACT ---------------- */
+async function handleFileUpload(e){
+ let file=e.target.files[0];
+ if(!file)return;
+ document.getElementById("fileLabel").innerText="Processing...";
+
+ let text="";
+ if(file.type.includes("pdf")) text=await extractPDF(file);
+ else if(file.type.includes("image")) text=await extractImage(file);
+ else if(file.name.endsWith(".docx")) text=await extractDocx(file);
+ else text=await file.text();
+
+ let important=await analyzeWithGroq(text);
+ // The backend now saves the task, so we just need to re-fetch and render
+ fetchAndRenderTasks();
+ document.getElementById("fileLabel").innerText="Extracted & Saved ✔️";
+}
+
+async function extractPDF(file){
+ const typed=new Uint8Array(await file.arrayBuffer());
+ const pdf=await pdfjsLib.getDocument(typed).promise;
+ let text="";
+ for(let i=1;i<=pdf.numPages;i++){
+  let page=await pdf.getPage(i);
+  let c=await page.getTextContent();
+  text+=c.items.map(i=>i.str).join(" ");
+ }
+ return text;
+}
+
+async function extractImage(file){
+ let r=await Tesseract.recognize(file,"eng");
+ return r.data.text;
+}
+
+async function extractDocx(file){
+ let buffer=await file.arrayBuffer();
+ let r=await mammoth.extractRawText({arrayBuffer:buffer});
+ return r.value;
+}
+
+/* ---------------- GROQ AI VIA LOCAL PROXY ---------------- */
+async function analyzeWithGroq(text){
+try{
+ let res = await fetch("http://localhost:4000/groq",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+   model:"llama-3.3-70b-versatile",
+   temperature:0,
+   messages:[
+    {
+     role:"user",
+     content:`Extract only important reminder details.\n\nReturn STRICT JSON ONLY:\n{\n"summary":"short summary",\n"deadline":"date if exists else Not Found",\n"fine":"fine if exists else None",\n"priority":"High | Medium | Low"\n}\n\nText:\n${text}`
+    }
+   ]
+  })
+});
+
+ let json = await res.json();
+ let clean = json.choices[0].message.content.trim();
+ // Use a regex to extract the JSON content, handling potential markdown fences
+ const jsonMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+ if (jsonMatch && jsonMatch[1]) {
+  clean = jsonMatch[1].trim();
+ } else {
+  // If no markdown fences are found, assume the entire response is JSON
+  clean = clean;
+ }
+ let d = JSON.parse(clean);
+
+ return d;
+
+}catch(e){
+ console.log("Groq Failed",e);
+ return `\n🔹 ${text.slice(0,60)}...\n📅 Deadline: Not Found\n💰 Fine: None\n⚠️ Priority: Normal\n`;
+}
+}
+
+/* ---------------- UI ---------------- */
+ async function addTask(){
+ let v=document.getElementById("taskInput").value.trim();
+ if(!v)return alert("Enter something");
+
+ await analyzeWithGroq(v);
+
+ document.getElementById("taskInput").value="";
+ fetchAndRenderTasks();
+}
+
+function render(){
+ document.getElementById("statTasks").innerText=tasks.length;
+ document.getElementById("statCompleted").innerText=completed;
+ document.getElementById("statScore").innerText=
+ tasks.length===0?"0%":Math.floor((completed/tasks.length)*100)+"%";
+
+ let g=document.getElementById("taskGrid");
+ g.innerHTML="";
+ tasks.forEach((t)=>{
+  const isCompleted = t.status === 'completed';
+  const taskClasses = isCompleted ? 'line-through opacity-50' : '';
+  const buttonHtml = isCompleted 
+    ? '<span class="mt-3 text-green-500 font-semibold">Done!</span>'
+    : `<button onclick="finish('${t.id}')" class="mt-3 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">
+       Mark Done</button>`;
+
+ g.innerHTML+=`
+ <div class="card bg-[#1B1B24] border border-gray-700 p-4 rounded-xl ${taskClasses}">
+ <p class="font-semibold whitespace-pre-line">🔹 ${t.summary}<br/>📅 Deadline: ${t.deadline}<br/>💰 Fine: ${t.fine}<br/>⚠️ Priority: ${t.priority}</p>
+ ${buttonHtml}
+ </div>`;
+ });
+ renderReminders();
+}
+
+function getUrgencyClass(deadline) {
+  if (deadline === "Not Found" || !deadline) return "bg-gray-700"; // Default if no deadline
+
+  const now = new Date();
+  const deadlineDate = new Date(deadline);
+  const diffTime = deadlineDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return "bg-red-700"; // Overdue or today
+  if (diffDays <= 3) return "bg-yellow-600"; // Within 3 days
+  return "bg-green-600"; // More than 3 days away
+}
+
+function renderReminders(){
+ let r=document.getElementById("reminders");
+ r.innerHTML="";
+ 
+ showReminders();
+}
+
+function showReminders() {
+  const remindersContainer = document.getElementById("reminders");
+  remindersContainer.innerHTML = ""; // Clear previous reminders
+
+  const now = new Date();
+  const upcomingReminders = tasks.filter(t => {
+    if (t.status === 'completed' || t.deadline === "Not Found" || !t.deadline) return false;
+
+    const deadlineDate = new Date(t.deadline);
+    const diffTime = deadlineDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Show reminders if deadline is today or in the future (up to 7 days for now)
+    return diffDays >= -0 && diffDays <= 7; // -0 to include today if deadline is in the past, but still today
+  });
+
+  if (upcomingReminders.length === 0) {
+    remindersContainer.innerHTML = '<p class="text-gray-400 text-sm">No upcoming reminders.</p>';
+    return;
+  }
+
+  upcomingReminders.forEach(t => {
+    const urgencyClass = getUrgencyClass(t.deadline);
+    remindersContainer.innerHTML+=`
+    <div class="reminder p-4 rounded-xl shadow-lg border border-gray-700 ${urgencyClass} mb-3 flex items-center justify-between animate-fade-in">
+    <div class="flex-1">
+    <p class="font-bold text-lg whitespace-pre-line">🔹 ${t.summary}<br/>📅 Deadline: ${t.deadline}<br/>💰 Fine: ${t.fine}<br/>⚠️ Priority: ${t.priority}</p>
+    </div>
+    <span class="text-blue-200 text-sm ml-4">🔔 Smart Alert Active</span>
+    </div>`;
+  });
+}
+
+async function finish(id){
+ try {
+  await fetch(`http://localhost:4000/tasks/${id}`, {
+   method: 'DELETE'
+  });
+  fetchAndRenderTasks(); // Re-fetch and render after deletion
+ } catch (e) {
+  console.error("Error deleting task:", e);
+ }
+}
+
+async function fetchAndRenderTasks() {
+  try {
+    const res = await fetch("http://localhost:4000/tasks");
+    const data = await res.json();
+    if (data.message === "success") {
+      const allTasks = data.data;
+      tasks = allTasks; // Store all tasks
+      completed = allTasks.filter(task => task.status === 'completed').length;
+      render();
+    }
+  } catch (e) {
+    console.error("Error fetching tasks:", e);
+  }
+}
+
+fetchAndRenderTasks();
+
+// Update reminders every minute
+setInterval(fetchAndRenderTasks, 60000);
+
+</script>
+
+</body>
+</html>
